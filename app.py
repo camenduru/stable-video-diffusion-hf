@@ -13,8 +13,6 @@ from omegaconf import OmegaConf
 from PIL import Image
 from torchvision.transforms import ToTensor
 
-from scripts.util.detection.nsfw_and_watermark_dectection import \
-    DeepFloydDataFiltering
 from sgm.inference.helpers import embed_watermark
 from sgm.util import default, instantiate_from_config
 
@@ -51,8 +49,7 @@ def load_model(
     else:
         model = instantiate_from_config(config.model).to(device).eval()
 
-    filter = DeepFloydDataFiltering(verbose=False, device=device)
-    return model, filter
+    return model
 
 if version == "svd_xt":
     num_frames = 25
@@ -61,7 +58,7 @@ if version == "svd_xt":
 else:
     raise ValueError(f"Version {version} does not exist.")
 
-model, filter = load_model(
+model = load_model(
     model_config,
     device,
     num_frames,
@@ -208,7 +205,6 @@ def sample(
                 )
 
                 samples = embed_watermark(samples)
-                samples = filter(samples)
                 vid = (
                     (rearrange(samples, "t c h w -> t h w c") * 255)
                     .cpu()
